@@ -829,7 +829,7 @@ class Message(BaseUpdate):
         timestamp: The timestamp when the message was sent.
         reply_to_message: The message to which this message is a reply to. (optional)
         forwarded: Whether the message was forwarded.
-        forwarded_frequently: When the message was been forwarded meny times.
+        forwarded_many_times: Whether the message was forwarded many times.
         text: The text of the message (if the message type is text). (optional)
         image: The image of the message (if the message type is image). (optional)
         video: The video of the message (if the message type is video). (optional)
@@ -844,7 +844,7 @@ class Message(BaseUpdate):
     """
     reply_to_message: ReplyToMessage | None
     forwarded: bool
-    forwarded_frequently: bool
+    forwarded_many_times: bool
     text: str | None
     image: Image | None
     video: Video | None
@@ -872,8 +872,8 @@ class Message(BaseUpdate):
             from_user=User.from_dict(value['contacts'][0]),
             timestamp=datetime.fromtimestamp(int(message['timestamp'])),
             metadata=Metadata.from_dict(**value['metadata']),
-            forwarded=message.get('context', {}).get('forwarded', False),
-            forwarded_frequently=message.get('context', {}).get('frequently_forwarded', False),
+            forwarded=any(k in message.get('context', {}) for k in ('forwarded', 'frequently_forwarded')),
+            forwarded_many_times=message.get('context', {}).get('frequently_forwarded', False),
             reply_to_message=ReplyToMessage.from_dict(message.get('context')),
             text=message['text']['body'] if 'text' in message else None,
             image=Image.from_dict(_client=client, **message.get('image')) if 'image' in message else None,
@@ -913,7 +913,7 @@ class Message(BaseUpdate):
         if not media:
             raise ValueError('The message does not contain any media.')
         return media.download(path=filepath, filename=filename, in_memory=in_memory)
-
+744026
 
 @dataclass(frozen=True, slots=True)
 class CallbackButton(BaseUpdate):
